@@ -4,12 +4,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/VedantT-07/DevOpsLab.git'
-            }
-        }
-
         stage('Verify Files') {
             steps {
                 bat 'dir'
