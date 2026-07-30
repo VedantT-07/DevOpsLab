@@ -1,53 +1,79 @@
 pipeline {
-
     agent any
-
+ 
     stages {
-
-        stage('Verify Files') {
+        stage('Checkout') {
             steps {
-                bat 'dir'
+                echo 'Checking out source code...'
+                checkout scm
             }
         }
-
-        stage('Validate HTML') {
+ 
+        stage('Validate Files') {
             steps {
-                bat 'echo Validating HTML...'
-                // Add HTML validator command here if installed
+                echo 'Validating project files...'
+                bat '''
+                    if not exist index.html (
+                        echo ERROR: index.html not found
+                        exit /b 1
+                    )
+                    if not exist script.js (
+                        echo ERROR: script.js not found
+                        exit /b 1
+                    )
+                    if not exist style.css (
+                        echo ERROR: style.css not found
+                        exit /b 1
+                    )
+                    echo All required files are present.
+                '''
             }
         }
-
-        stage('Validate CSS') {
-            steps {
-                bat 'echo Validating CSS...'
-                // Add CSS validator command here if installed
-            }
-        }
-
-        stage('Validate JavaScript') {
-            steps {
-                bat 'echo Validating JavaScript...'
-                // Example if ESLint is installed:
-                // bat 'npx eslint script.js'
-            }
-        }
-
+ 
         stage('Build') {
             steps {
-                bat 'echo Build completed successfully!'
+                echo 'Building the application...'
+                bat '''
+                    if exist dist rmdir /s /q dist
+                    mkdir dist
+                    copy index.html dist\\
+                    copy script.js dist\\
+                    copy style.css dist\\
+                    echo Build completed successfully. Files copied to dist folder.
+                '''
+            }
+        }
+ 
+        stage('Test') {
+            steps {
+                echo 'Running basic tests...'
+                bat '''
+                    if not exist dist\\index.html (
+                        echo ERROR: Build failed - index.html missing in dist
+                        exit /b 1
+                    )
+                    echo Tests passed.
+                '''
+            }
+        }
+ 
+        stage('Deploy') {
+            steps {
+                echo 'Deploying application...'
+                bat '''
+                    echo Application is ready in the dist folder.
+                    dir dist
+                '''
             }
         }
     }
-
+ 
     post {
-        always {
-            echo 'Pipeline execution completed.'
-        }
         success {
-            echo 'HTML/CSS/JS project built successfully.'
+            echo 'CI/CD Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed.'
+            echo 'Pipeline failed!'
         }
     }
 }
